@@ -27,7 +27,7 @@ async function post(req, res){
     product.save()
 
     res.send({
-        message: 'ok'
+        message: 'succes'
     })
 }
 
@@ -39,7 +39,7 @@ async function put(req, res){
     await product.updateOne(req.body)
 
     res.send({
-        message: 'ok',
+        message: 'succes',
         product,
     })
 }

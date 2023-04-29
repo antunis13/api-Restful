@@ -5,6 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+
+    <style>
+        .hidden{
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h2>Listagem de produtos</h2>
@@ -32,12 +38,82 @@
             <button type="submit">Cadastrar</button>
         </div>
     </form>
+
+    <div id="edit" class="hidden">
+        <hr>
+        <h2>Edição de Produto</h2>
+
+        <form id="formEdit">
+            <input type="hidden" name="id">
+            <div>
+                <label>Nome:</label>
+                <input type="text" name="name">
+            </div>
+            <div>
+                <label>Marca:</label>
+                <input type="text" name="brand">
+            </div>
+            <div>
+                <label>Preço:</label>
+                <input type="number" name="price">
+            </div>
+            <div>
+                <button type="submit">Alterar Produto</button>
+            </div>
+        </form>
+    </div>
     
     <script>
         const API_URL = 'http://localhost:8080/api/products'
 
         const productsList = document.querySelector('#products-list') 
         const form = document.querySelector('#form') 
+        const edit = document.querySelector('#edit')
+        const formEdit = document.querySelector('#formEdit')
+
+        function addingRemoveBtnEvent(){
+            const removeButtons = document.querySelectorAll('.remove-button')
+            removeButtons.forEach(button => {
+                button.onclick = function(e) {
+                    e.preventDefault()
+                    const id = this.dataset.id
+
+                    fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    }).then(response => {
+                    response.json().then(data =>{
+                        if(data.message === 'success'){
+                            obterLista()
+                            alert('Produto excluído com sucesso')
+                        }else{
+                            alert('Ocorreu um erro, tente novamente.')
+                        }
+                    })
+                    }) 
+                }
+            })
+        }
+        
+        function addingEditBtnEvent(){
+            const editButtons = document.querySelectorAll('.edit-button')
+            editButtons.forEach(button => {
+                button.onclick = function(e) {
+                    e.preventDefault()
+                    
+                    edit.classList.remove('hidden')
+
+                    const id = this.dataset.id
+                    const name = this.dataset.name
+                    const brand = this.dataset.brand
+                    const price = this.dataset.price
+
+                    document.forms['formEdit'].id.value = id
+                    document.forms['formEdit'].name.value = name
+                    document.forms['formEdit'].brand.value = brand
+                    document.forms['formEdit'].price.value = price
+                }
+            })
+        }
 
         function obterLista(){
             fetch(API_URL).then(response =>{
@@ -45,32 +121,22 @@
                  const productsHtml = data.map(products => `
                         <li>
                             ${products.name} -   ${products.brand} -   ${products.price} -
+                            <a href="#" class="edit-button"
+                                data-id="${products._id}"
+                                data-name="${products.name}"
+                                data-brand="${products.brand}"
+                                data-price="${products.price}"
+                            >
+                                [Editar]
+                            </a> 
                             <a href="#" class="remove-button" data-id="${products._id}">[Excluir]</a> 
                         </li>    
                     `).join('')
                     
                     productsList.innerHTML = productsHtml
 
-                    const removeButtons = document.querySelectorAll('.remove-button')
-                        removeButtons.forEach(button => {
-                            button.onclick = function(e) {
-                                e.preventDefault()
-                                const id = this.dataset.id
-
-                              fetch(`${API_URL}/${id}`, {
-                                method: 'DELETE',
-                              }).then(response => {
-                                response.json().then(data =>{
-                                    if(data.message === 'success'){
-                                        obterLista()
-                                        alert('Produto excluído com sucesso')
-                                    }else{
-                                        alert('Ocorreu um erro, tente novamente.')
-                                    }
-                                })
-                              }) 
-                            }
-                        })
+                    addingRemoveBtnEvent()
+                    addingEditBtnEvent()
                 })
             })//.catch(error => console.log(error))
         }
@@ -96,7 +162,7 @@
                 })
             }).then(response =>{
                response.json().then(data =>{
-                if(data.message === 'succes'){
+                if(data.message === 'success'){
                     form.reset()
                     obterLista()
                     alert('Cadastro realizado com sucesso')
@@ -107,6 +173,36 @@
             })
         }
 
+        formEdit.onsubmit = function(e){
+            e.preventDefault()
+            const id = document.forms['formEdit'].id.value
+            const name = document.forms['formEdit'].name.value
+            const brand = document.forms['formEdit'].brand.value
+            const price = document.forms['formEdit'].price.value
+
+            fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers:{
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    brand,
+                    price,
+                })
+            }).then(response => {
+                    response.json().then(data =>{
+                        if(data.message === 'success'){
+                            formEdit.reset()
+                            edit.classList.add('hidden')
+                            obterLista()
+                            alert('Produto alterado com sucesso')
+                        }else{
+                            alert('Ocorreu um erro, tente novamente.')
+                        }
+                    })
+                }) 
+        }
     </script>
 </body>
 </html>

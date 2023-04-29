@@ -44,11 +44,33 @@
                 response.json().then(data =>{
                  const productsHtml = data.map(products => `
                         <li>
-                            ${products.name} -   ${products.brand} -   ${products.price}
+                            ${products.name} -   ${products.brand} -   ${products.price} -
+                            <a href="#" class="remove-button" data-id="${products._id}">[Excluir]</a> 
                         </li>    
                     `).join('')
                     
                     productsList.innerHTML = productsHtml
+
+                    const removeButtons = document.querySelectorAll('.remove-button')
+                        removeButtons.forEach(button => {
+                            button.onclick = function(e) {
+                                e.preventDefault()
+                                const id = this.dataset.id
+
+                              fetch(`${API_URL}/${id}`, {
+                                method: 'DELETE',
+                              }).then(response => {
+                                response.json().then(data =>{
+                                    if(data.message === 'success'){
+                                        obterLista()
+                                        alert('Produto excluído com sucesso')
+                                    }else{
+                                        alert('Ocorreu um erro, tente novamente.')
+                                    }
+                                })
+                              }) 
+                            }
+                        })
                 })
             })//.catch(error => console.log(error))
         }
